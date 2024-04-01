@@ -1,2 +1,2 @@
-# TubeBender
- 
+1. In one terminal, run "node server.js" to start the node.js server. For the development, node.js version 20.11.0 was used. Other versions are untested.
+2. Open another termianl, run ''cd serial-monitor'', then ''npm start'' to run the development sever.

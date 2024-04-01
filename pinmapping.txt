@@ -1,0 +1,28 @@
+Serial: 0 (RX) and 1 (TX); Serial 1: 19 (RX) and 18 (TX); Serial 2: 17 (RX) and 16 (TX); Serial 3: 15 (RX) and 14 (TX). Pins 0 and 1 are also connected to the corresponding pins of the ATmega16U2 USB-to-TTL Serial chip.
+External Interrupts: 2 (interrupt 0), 3 (interrupt 1), 18 (interrupt 5), 19 (interrupt 4), 20 (interrupt 3), and 21 (interrupt 2).
+PWM: 2 to 13 and 44 to 46.
+SPI: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (SS).
+LED: 13. There is a built-in LED connected to digital pin 13.
+TWI: 20 (SDA) and 21 (SCL).
+
+A0 = pushbuttons by lcd
+// lcd
+rs = 8
+en = 9
+d4 = 4
+d5 = 5
+d6 = 6
+d7 = 7
+
+BL = 10 (?)
+
+valvePWMpin = 13
+
+pushbutton1 = 10
+pushbutton2 = 11
+
+encoderinterruptpinA = 2
+encoderinterruptpinB = 3
+
+
+
