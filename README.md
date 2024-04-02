@@ -5,7 +5,7 @@
 Download using the green button at the top labelled "Code". This opens a drop down menu where you can click "Download ZIP". Unzip this file.
 
 # Starting the server
-Open a terminal in the "TubeBender-main" folder (In Windows, right click and select "open in terminal"). Run `npm install` to install all dependencies. This should not take very long. When that is finished, run `npm start`. If you see "Server is running on port 3001" printed on the terminal, the server is running properly.
+Open a terminal in the "TubeBender-main" folder (In Windows, right click and select "open in terminal"). Run `npm install` to install all dependencies. This should not take very long. When that is finished, plug in the arduino USB cable and run `npm start` in the terminal. If you see "Server is running on port 3001" printed on the terminal, the server is running properly.
 
 ### I am getting an error
 
