@@ -28,5 +28,3 @@ Open another terminal (A different one from the one used for starting the server
 - If "Connected to socket" is displayed in the top left corner of the HMI, but no data is coming in (the values are not changing/staying at 0), the connection to the server is good, but something may be wrong with the arduino. Try console logging the data in the server, and seeing if anything is coming in at all. Check the arduino code (tubebender.ino) and see that everything looks good. Try reuploading the code to the arduino.
 
 - If "Not connected to socket" is displayed in the top left corner, the problem is the connection between the HMI and the server. This can occur from a variety of reasons. It is likely that a restart of everything will fix it, but if that does not work, more extensive troubleshooting needs to be done. From experience, this error rarely occurs, and when it does it is usually because code in the server or HMI that should not be touched having been touched.
-
-test
