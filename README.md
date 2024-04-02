@@ -7,7 +7,7 @@ Download using the green button at the top labelled "Code". This opens a drop do
 # Starting the server
 Open a terminal in the "TubeBender-main" folder (In Windows, right click and select "open in terminal"). Run `npm install` to install all dependencies. This should not take very long. When that is finished, plug in the arduino USB cable and run `npm start` in the terminal. If you see "Server is running on port 3001" printed on the terminal, the server is running properly.
 
-### I am getting an error
+### I am getting an error "Error: Opening COM5: File not found"
 
 The error is likely because the server cannot connect to the serial port that the arduino is using. Check that the arduino is connected to the pc. If the error persists, check which serial port the arduino is using (this can be done using for example the Arduino IDE, or VSCode). If it is using a port that isnt "COM5", you have to edit the "server.js" file in the "TubeBender-main" folder. The "serialPort" variable defines which serial port the server is accessing. It looks like this:
 
