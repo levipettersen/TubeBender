@@ -18,7 +18,7 @@ const serialPort = new SerialPort({
 })
 ```
 
-Edit the path (Where it says "COM5") so that it corresponds to the serialport of the arduino
+Edit the path (Where it says "COM5") so that it corresponds to the serialport of the arduino. Try "COM1", "COM2", "COM3", "COM4". At least one of those should work
 
 ### I do not see "open in terminal"
 If the option to "open in terminal" in windows does not appear, right click in the folder, click "vis flere alternativer/view more options", then "egenskaper/properties". Copy the location of the folder ("plassering"). Open a terminal (In windows, search for "cmd" and push enter), then do `cd filelocationhere`. Then run `cd TubeBender-main`. Now you can proceed with the `npm install` step.
