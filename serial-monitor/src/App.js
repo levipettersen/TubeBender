@@ -8,6 +8,11 @@ import Plot from 'react-plotly.js';
 
 import ExportButtonCSV from './ExportButtonCSV';
 
+import HoverInfo from './Components/HoverInfo';
+
+import { Gauge } from '@mui/x-charts/Gauge'
+// https://mui.com/x/react-charts/gauge/
+
 // Comment out for local testing
 // let socket = io('http://localhost:3001', { transports : ['websocket'] }); // Update with your server URL
 function connectToSocket() {
@@ -19,7 +24,6 @@ function connectToSocket() {
 // Ctrl+k Ctrl+. to remove manual folding range
 
 // TODO: knapper for å velge hvilken data som skal plottes
-let appStyle = {};
 
 const plotConfig = {
   scrollZoom: true, 
@@ -37,9 +41,12 @@ let deltaTime;
 
 function App() {
 
-  
+  const [menuState, setMenuState] = useState('main');
 
-  
+  const [emergencyStop, setEmergencyStop] = useState(false);
+
+  const [controlMode, setControlMode] = useState('manual');
+
   const [serialData, setSerialData] = useState({ timestamp: 0, sensor: 0, lcdButton: 0, encoderPos: 0, strainGauge: 0, pressureTransmitter: 0, deserializationError: false });
   const [arduinoData, setArduinoData] = useState({ counter: 0, textInput: '', valvePWM: 127, motorOn: 0 });
   
@@ -101,11 +108,11 @@ function App() {
 
       tempSerialData = {
         timestamp: serialData.timestamp + 100,
-        sensor: Math.round(Math.sin(1*serialData.timestamp/1000)*512 + 512),
-        lcdButton: Math.round(Math.sin(2*serialData.timestamp/1000)*512 + 512),
-        encoderPos: Math.round(Math.sin(3*serialData.timestamp/1000)*512 + 512),
-        strainGauge: Math.round(Math.sin(4*serialData.timestamp/1000)*512 + 512),
-        pressureTransmitter: Math.round(Math.sin(5*serialData.timestamp/1000)*512 + 512),
+        sensor: Math.round(Math.sin(1*serialData.timestamp/10000)*512 + 512),
+        lcdButton: Math.round(Math.sin(2*serialData.timestamp/10000)*512 + 512),
+        encoderPos: Math.round(Math.sin(3*serialData.timestamp/10000)*512 + 512),
+        strainGauge: Math.round(Math.sin(4*serialData.timestamp/10000)*512 + 512),
+        pressureTransmitter: Math.round(Math.sin(5*serialData.timestamp/10000)*512 + 512),
         deserializationError: false
       }
 
@@ -197,37 +204,248 @@ function App() {
     // eslint-disable-next-line
   }, [serialData, isHistorizing]);
 
-
-  const [catMode, setCatMode] = useState(false);
-
-  useEffect(() => {
-    if (catMode) {
-      appStyle = {
-        backgroundImage: "url(" + require("./catImage.jpg") + ")",
-      };
-    } else {
-      appStyle = {
-        backgroundImage: "",
-      };
-    }
-  }, [catMode]);
-
   //function toggleMotor() {
   //  setArduinoData({ ...arduinoData, motorOn: !arduinoData.motorOn});
   //}
-      
-  return (
-    <div className="App" style={appStyle}>
-      <div style={{position: "absolute", left: "10px"}}>
+
+
+    return (
+    <div className="App">
+      <div style={{position: "absolute", left: "10px", top: "10px", width: "450px", height: "30px", display: "flex", justifyContent: "space-around", alignItems: "center"}}>
         {/* Comment out for local testing */}
         {/*socket.connected*/ true ? (<p>Connected to socket</p>)  : (<p>Not connected to socket</p>)}
-      </div>
-      <div style={{position: "absolute", right: "10px", top: "10px"}}>
-        <button onClick={() => setCatMode((e) => !e)}> toggle cat mode </button>
+        <button onClick={() => setMenuState('main')}>Main</button>
+        <button onClick={() => setMenuState('plot')}>Plot</button>
+        <button onClick={() => setMenuState('dev')}>Dev</button>
+        <div>Current page is {menuState}</div>
       </div>
       <h1>Serial Data Monitor</h1>
-      
-      {serialData ? (
+        {
+          menuState === 'main' ? // MAIN MENU
+          <div className='mainContainer'>
+            <div>
+              <p>Set control mode (manual, automatic)</p>
+              <button onClick={() => setControlMode('manual')}
+              disabled={emergencyStop}
+              >Manual control</button>
+              <button onClick={() => {
+                setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
+                setControlMode('automatic');
+                }}
+                disabled={emergencyStop}
+                >Automatic control</button>
+              <p>Current control mode is {controlMode}</p>
+            </div>
+            <div>
+              <p>Manual motor control</p>
+              <button 
+              disabled={controlMode === 'automatic' || emergencyStop}
+              onClick={() => setArduinoData({...arduinoData, motorOn: !arduinoData.motorOn})}>{arduinoData.motorOn ? "Motor is on" : "Motor is off"}</button>
+            </div>
+            <div>
+              <p>Manual valve PWM control</p>
+              <input type="number" 
+              disabled={arduinoData.motorOn || controlMode === 'automatic' || emergencyStop} 
+              defaultValue={127} 
+              onChange={(e) => setArduinoData({ ...arduinoData, valvePWM: e.target.value})} 
+              value={arduinoData.valvePWM}
+              />
+              {/* <p>Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p> */}
+              <div style={{
+                position: "relative", 
+                // top: "30px", 
+                top: "2vh",
+                // right: "150px",
+                right: "8vw",
+                }}>
+                <HoverInfo>Operator Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW</HoverInfo>
+              </div>
+            </div>
+            <div> 
+              <p>Automatic bending. Enter desired bend angle and springback value </p>
+              <p style={{margin:"0"}}>Desired bend angle <input type="number" /> </p>
+              <p style={{margin:"0"}}>Springback angle <input type="number" /> </p>
+              <button>Start automatic bending</button>
+            </div>
+            <div> 
+              <p>Motor state (idle, motor running, emergency stop)</p>
+              <p>
+              {
+                  emergencyStop ? "Emergency stop" :
+                  arduinoData.motorOn ? "Motor is running" : "Motor is idle"
+              }
+              </p>
+            </div>
+            <div> 
+              <p>Current bend angle: {serialData.encoderPos} </p>
+              <div>
+                <Gauge 
+                width={75} 
+                height={75} 
+                value={serialData.encoderPos} 
+                valueMin={0}
+                valueMax={1023}
+                />
+              </div>
+            </div>
+            <div> 
+              <p>Temperature </p>
+
+              <div>
+                <Gauge 
+                width={75} 
+                height={75} 
+                value={23} 
+                valueMin={0}
+                valueMax={40}
+                />
+              </div>
+
+              </div>
+            <div> <p
+              style={{
+                margin: "0 0 0.5em 0"
+              }}
+            >Raw data</p>
+              {
+                Object.entries(serialData).map((entry, index) => {
+                  return (
+                    <p 
+                    style={{
+                      margin: "0",
+                      fontSize: "12px",
+                    }}
+                    key={index}>{entry[0]}: {String(entry[1])}</p>
+                  );
+                })
+              }
+            </div>
+            <div> 
+              <p>Emergency stop button </p>
+              <button
+              style={{
+                height: "90%",
+                width: "90%",
+                backgroundColor: "red",
+                marginBottom: "10px",
+                borderRadius: "15px",
+                fontSize: "1.5em",
+              }}
+              onClick={() => {
+                setEmergencyStop(true)
+                setArduinoData({...arduinoData, motorOn: false, valvePWM: 127})
+              }}
+              >EMERGENCY STOP</button>
+              
+              {
+                emergencyStop ? 
+                <button
+                style={{
+                  margin: "0"
+                }}
+                onClick={() => setEmergencyStop(false)}
+                >reset</button>
+                :
+                <></>
+              }
+              
+            </div>
+            <div> 
+              <p>Hydraulic Pressure: {Math.round(serialData.pressureTransmitter*400/1023)} Bar </p>
+              
+              <div>
+                <Gauge 
+                width={75} 
+                height={75} 
+                value={Math.round(serialData.pressureTransmitter*400/1023)} 
+                valueMin={0}
+                valueMax={400}
+                />
+              </div>
+            
+            </div>
+            <div
+              style={{
+                // go from line 3 to 5 on both row and column
+                gridRow: '3 / 5',
+                gridColumn: '3 / 5',
+                // backgroundColor: 'lightblue',
+                display: 'flex',
+                justifyContent: 'center',
+                height: '84%',
+              }}
+            > Picture </div>
+            {/* <div> other data </div> */}
+            <div
+              style={{
+              gridRow: '1/3',
+              gridColumn: '4/5',
+              display: 'flex',
+              justifyContent: 'center',
+              height: "84%"
+              }}
+            > bending list </div>
+            {/* <div> bending list </div> */}
+            {/* <div> bending list </div> */}
+            {/* <div> bending list </div> */}
+
+          </div> :
+          menuState === 'plot' ? // PLOT MENU
+          <>
+            {/* <PlotComponent /> */}
+            <div className='DataVisualizeContainer'>
+            <h2>Historized data</h2>
+            <div className='ChartButtonContainer'>
+              <button onClick={() => setIsHistorizing(!isHistorizing)}>{isHistorizing ? 'Stop historizing' : 'Start historizing'}</button>
+              <button onClick={() => console.log(historizedData)}>Log historized data</button>
+              <button onClick={() => setHistorizedData([])}>Clear historized data</button>
+            </div>
+            <div className='ChartContainer'>
+              {isHistorizing ? (
+                <p>Is historizing</p>
+              ) : (
+                <p>Not historizing</p>
+              )}
+              {historizedData.length > 0 ? <ExportButtonCSV data={historizedData} /> : <></> }
+
+              <fieldset>
+                <legend>Plotted data</legend>
+
+                {/* Map serial data */}
+
+                {checkboxState.map((entry, index) => {
+                  return (
+                    <div key={index}>
+                      <input type="checkbox" id={entry.name} name={entry.name} checked={entry.checked} onChange={() => {
+                        setCheckboxState((state) => {
+                          return state.map((entry) => {
+                            if (entry.name === checkboxState[index].name) {
+                              return {name: entry.name, checked: !entry.checked, color: entry.color};
+                            } else {
+                              return entry;
+                            }
+                          });
+                        });
+                      }} />
+                      <label htmlFor={entry.name}>{entry.name}</label>
+                    </div>
+                  );
+                }
+                )}
+              </fieldset>
+              <div>
+                <Plot
+                data={plotState.data}
+                layout={plotLayout}
+                config={plotConfig}
+                onInitialized={(figure) => setPlotState(figure)}
+                onUpdate={(figure) => setPlotState(figure)}
+                />
+              </div>
+            </div>
+            </div>
+          </> : // DEV MENU
+
         <div className='ContentContainer'>
           <div className='DataContainer'>
             <div className='ArduinoDataContainer'>
@@ -313,16 +531,14 @@ function App() {
                 />
               </div>
             </div>
-          </div>
+      </div>
         </div>
-      ) : (
-        <div>
-          <p>No data </p>
-        </div>
-      )}
-
+        }
     </div>
   );
+
+
+
 }
 
 
