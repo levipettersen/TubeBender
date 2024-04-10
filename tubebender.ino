@@ -30,6 +30,8 @@ bool motorOn = false;
 
 int potpos;
 
+int controlMode;
+
 void setup() {
   Serial.begin(9600);
   encoderSetup();
@@ -39,6 +41,8 @@ void setup() {
   lcd.print("Starting up");
 
   pinMode(motorPin, OUTPUT);
+
+  controlMode = 1;
 }
 
 void loop() {
@@ -50,16 +54,45 @@ void loop() {
   lcdPushButtonValue = analogRead(lcdPushButtonPin);
   if (lcdPushButtonValue < 60){
     lcdPushButtonCommand = "Right";
+    if (controlMode == 1) {
+      motorOn = true;
+    }
   } else if(lcdPushButtonValue >= 60 && lcdPushButtonValue <= 200){
     lcdPushButtonCommand = "Up";
+    if (controlMode == 1) {
+      motorOn = false;
+      valvePWM = 127;
+    }
+    controlMode = 2;
   } else if (lcdPushButtonValue >= 200 && lcdPushButtonValue <= 400){
       lcdPushButtonCommand = "Down";
+      if (controlMode == 2) {
+        motorOn = false;
+        valvePWM = 127;
+      }
+      controlMode = 1;
   } else if (lcdPushButtonValue >= 400 && lcdPushButtonValue <= 600){
     lcdPushButtonCommand = "Left";
+    if (controlMode == 1) {
+      motorOn = false;
+    }
   } else if (lcdPushButtonValue >= 600 && lcdPushButtonValue <= 800){
     lcdPushButtonCommand = "Select";
   } else {
     lcdPushButtonCommand = "None";
+  }
+
+  lcd.clear();
+  lcd.print("Control Mode:");
+  lcd.setCursor(0, 1);
+
+  switch(controlMode) {
+    case 1:
+      lcd.print("Manual");
+      break;
+    case 2:
+      lcd.print("Automatic");
+      break;
   }
 
   encoderPos = getEncoderPos() * 3 / 20;
@@ -84,25 +117,31 @@ void loop() {
 
       deserializationError = false;
 
-      valvePWM = docIn["valvePWM"];
-      motorOn = docIn["motorOn"];
+      if (controlMode == 2) {
+        valvePWM = docIn["valvePWM"];
+        motorOn = docIn["motorOn"];
+      }
 
-      lcd.clear();
+      // lcd.clear();
       //lcd.print(docIn["counter"].as<String>());
-      lcd.print(valvePWM);
+      // lcd.print(valvePWM);
 
-      lcd.setCursor(0, 1);
+      // lcd.setCursor(0, 1);
       //lcd.print(docIn["textInput"].as<String>());
-      lcd.print(motorOn);
+      // lcd.print(motorOn);
     } else {
       deserializationError = true;
-      lcd.clear();
-      lcd.print("Deserialization");
-      lcd.setCursor(0, 1);
-      lcd.print("error");
 
-      valvePWM = 128;
-      motorOn = false;
+      if (controlMode == 2) {
+        lcd.clear();
+        lcd.print("Deserialization");
+        lcd.setCursor(0, 1);
+        lcd.print("error");
+        valvePWM = 127;
+        motorOn = false;
+      }
+
+
     }
   }
 
@@ -112,21 +151,23 @@ void loop() {
 
   // if time since last incoming serial > 2 seconds, turn everything off
   timesincelastserialin = millis() - serialtimestamp;
-  if (millis() - serialtimestamp > 2000) {
-    lcd.clear();
-    lcd.print("no serial");
-
-    valvePWM = 128;
+  if (millis() - serialtimestamp > 2000 && controlMode == 2) {
+    // lcd.clear();
+    // lcd.print("no serial");
+    valvePWM = 127;
     motorOn = false;
   }
 
   docOut["deserializationError"] = deserializationError;
+  docOut["controlMode"] = controlMode;
   String jsonString;
   serializeJson(docOut, jsonString);
   Serial.println(jsonString);
 
-  analogWrite(PWMpin, valvePWM);
 
+  // if (controlMode == 2) {
+  analogWrite(PWMpin, valvePWM);
   digitalWrite(motorPin, motorOn);
+  // }
 
 }

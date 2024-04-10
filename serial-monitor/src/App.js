@@ -19,10 +19,10 @@ import Warning from '@mui/icons-material/Warning';
 // https://fonts.google.com/icons?icon.set=Material+Icons
 
 // Comment out for local testing
-// let socket = io('http://localhost:3001', { transports : ['websocket'] }); // Update with your server URL
+let socket = io('http://localhost:3001', { transports : ['websocket'] }); // Update with your server URL
 function connectToSocket() {
   // Comment out for local testing
-  // socket = io('http://localhost:3001', { transports : ['websocket'] });
+  socket = io('http://localhost:3001', { transports : ['websocket'] });
 }
 
 // Ctrl+k Ctrl+, to create manual folding range
@@ -52,7 +52,7 @@ function App() {
 
   const [controlMode, setControlMode] = useState('manual');
 
-  const [serialData, setSerialData] = useState({ timestamp: 0, sensor: 0, lcdButton: 0, encoderPos: 0, strainGauge: 0, pressureTransmitter: 0, deserializationError: false });
+  const [serialData, setSerialData] = useState({ timestamp: 0, sensor: 0, lcdButton: 0, encoderPos: 0, strainGauge: 0, pressureTransmitter: 0, deserializationError: false, controlMode: 0 });
   const [arduinoData, setArduinoData] = useState({ counter: 0, textInput: '', valvePWM: 127, motorOn: 0 });
   
   const [historizedData, setHistorizedData] = useState([]);
@@ -69,7 +69,7 @@ function App() {
   console.log(`Height: ${height}, Width: ${width}`);
 
   // Comment out for local testing
-  // socket.emit('arduinoData', JSON5.stringify(arduinoData));
+  socket.emit('arduinoData', JSON5.stringify(arduinoData));
 
   useEffect(() => {
     let UIDebounceInterval;
@@ -77,15 +77,15 @@ function App() {
 
     // Connect to websocket if not already connected
     // Comment out for local testing
-    // if (!socket || socket.disconnected) {
-    //   connectToSocket();
-    // }
+    if (!socket || socket.disconnected) {
+      connectToSocket();
+    }
     
     // Handles closing the websocket
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       // Comment out for local testing
-      // socket.disconnect();
+      socket.disconnect();
       const confirmationMessage = 'Disconnect from websocket?';
       event.returnValue = confirmationMessage; // Standard for most browsers
       return confirmationMessage; // For some older browsers
@@ -97,57 +97,57 @@ function App() {
 
     // Receive and parse data from serial port
     // Comment out for local testing
-    // socket.on('serialData', (data) => {
-    //   try {
-    //     tempSerialData = JSON5.parse(data);
-    //     setSerialData(tempSerialData);
-    //     lastTime = thisTime;
-    //     thisTime = Number(tempSerialData.timestamp);
-    //     deltaTime = thisTime - lastTime;
-    //   } catch (error) {
-    //     // something went wrong with parsing the data
-    //   }
-    // });
+    socket.on('serialData', (data) => {
+      try {
+        tempSerialData = JSON5.parse(data);
+        setSerialData(tempSerialData);
+        lastTime = thisTime;
+        thisTime = Number(tempSerialData.timestamp);
+        deltaTime = thisTime - lastTime;
+      } catch (error) {
+        // something went wrong with parsing the data
+      }
+    });
 
     // update state with parsed data every 50ms
     UIDebounceInterval = setInterval(() => {
       // Comment out for live testing
-      setSerialData(tempSerialData);
+      // setSerialData(tempSerialData);
 
-      tempSerialData = {
-        timestamp: serialData.timestamp + 100,
-        sensor: Math.round(Math.sin(1*serialData.timestamp/10000)*512 + 512),
-        lcdButton: Math.round(Math.sin(2*serialData.timestamp/10000)*512 + 512),
-        encoderPos: Math.round(Math.sin(3*serialData.timestamp/10000)*512 + 512),
-        strainGauge: Math.round(Math.sin(4*serialData.timestamp/10000)*512 + 512),
-        pressureTransmitter: Math.round(Math.sin(5*serialData.timestamp/10000)*512 + 512),
-        deserializationError: false
-      }
+      // tempSerialData = {
+      //   timestamp: serialData.timestamp + 100,
+      //   sensor: Math.round(Math.sin(1*serialData.timestamp/10000)*512 + 512),
+      //   lcdButton: Math.round(Math.sin(2*serialData.timestamp/10000)*512 + 512),
+      //   encoderPos: Math.round(Math.sin(3*serialData.timestamp/10000)*512 + 512),
+      //   strainGauge: Math.round(Math.sin(4*serialData.timestamp/10000)*512 + 512),
+      //   pressureTransmitter: Math.round(Math.sin(5*serialData.timestamp/10000)*512 + 512),
+      //   deserializationError: false
+      // }
 
-      setSerialData(tempSerialData);
-        lastTime = thisTime;
-        thisTime = Number(tempSerialData.timestamp);
-        deltaTime = thisTime - lastTime;
+      // setSerialData(tempSerialData);
+      //   lastTime = thisTime;
+      //   thisTime = Number(tempSerialData.timestamp);
+      //   deltaTime = thisTime - lastTime;
 
     }, 100);
 
     // Cleanup
     return () => {
       // Comment out for local testing
-      // socket.disconnect();
+      socket.disconnect();
       clearInterval(UIDebounceInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
     // Comment out for live testing
-  }, [serialData]);
+  // }, [serialData]);
     // Comment out for local testing
-  // }, []);
+  }, []);
 
 
   // Send data to arduino upon change
   useEffect(() => {
     // Comment out for local testing
-    // socket.emit('arduinoData', JSON5.stringify(arduinoData));
+    socket.emit('arduinoData', JSON5.stringify(arduinoData));
   }, [arduinoData]);
 
 
