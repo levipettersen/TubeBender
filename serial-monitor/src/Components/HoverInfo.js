@@ -18,7 +18,7 @@ function HoverInfo(props) {
             border: "3px solid grey",
             borderRadius: "20px",
             }} onMouseEnter={onHover} onMouseLeave={onLeave}>
-            <p style={{color: "#2F4F4F"}}>?</p> {hover && <div style={{position: "absolute", left: "30px", color: "#2F4F4F", width: "300px"}}>{props.children}</div>}
+            <p style={{color: "#2F4F4F"}}>?</p> {hover && <div style={{position: "absolute", left: "30px", color: "#2F4F4F"}}>{props.children}</div>}
         </div>
     );
 }

@@ -10,6 +10,8 @@ import ExportButtonCSV from './ExportButtonCSV';
 
 import HoverInfo from './Components/HoverInfo';
 
+import useWindowDimensions from './Components/useWindowDimensions';
+
 import { Gauge } from '@mui/x-charts/Gauge'
 // https://mui.com/x/react-charts/gauge/
 
@@ -62,6 +64,9 @@ function App() {
     // give each entry a unique color
     return {name: entry[0], checked: false, color: `rgb(${Math.floor(Math.random()*256)}, ${Math.floor(Math.random()*256)}, ${Math.floor(Math.random()*256)})`};
   }));
+
+  const { height, width } = useWindowDimensions();
+  console.log(`Height: ${height}, Width: ${width}`);
 
   // Comment out for local testing
   // socket.emit('arduinoData', JSON5.stringify(arduinoData));
@@ -253,22 +258,27 @@ function App() {
               defaultValue={127} 
               onChange={(e) => setArduinoData({ ...arduinoData, valvePWM: e.target.value})} 
               value={arduinoData.valvePWM}
+              style={{
+                width: "6vw",
+                height: "2vh"
+              }}
               />
               {/* <p>Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p> */}
               <div style={{
                 position: "relative", 
                 // top: "30px", 
-                top: "2vh",
+                top: "0vh",
                 // right: "150px",
-                right: "8vw",
+                right: "9vw",
+                // fontSize: "1.5vh",
                 }}>
-                <HoverInfo>Operator Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW</HoverInfo>
+                <HoverInfo><p style={{width: "17.5vw", fontSize: "1.5vh"}} >Operator Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p></HoverInfo>
               </div>
             </div>
             <div> 
               <p>Automatic bending. Enter desired bend angle and springback value </p>
-              <p style={{margin:"0"}}>Desired bend angle <input type="number" /> </p>
-              <p style={{margin:"0"}}>Springback angle <input type="number" /> </p>
+              <p style={{margin:"0"}}>Desired bend angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
+              <p style={{margin:"0"}}>Springback angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
               <button>Start automatic bending</button>
             </div>
             <div> 
@@ -284,8 +294,8 @@ function App() {
               <p>Current bend angle: {serialData.encoderPos} </p>
               <div>
                 <Gauge 
-                width={75} 
-                height={75} 
+                width={height/10} 
+                height={height/10} 
                 value={serialData.encoderPos} 
                 valueMin={0}
                 valueMax={1023}
@@ -297,8 +307,8 @@ function App() {
 
               <div>
                 <Gauge 
-                width={75} 
-                height={75} 
+                width={height/10} 
+                height={height/10} 
                 value={23} 
                 valueMin={0}
                 valueMax={40}
@@ -306,9 +316,14 @@ function App() {
               </div>
 
               </div>
-            <div> <p
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              // alignItems: "flex-start",
+              flexWrap: "wrap",
+            }} > <p
               style={{
-                margin: "0 0 0.5em 0"
+                // margin: "0 0 0.5em 0"
               }}
             >Raw data</p>
               {
@@ -317,7 +332,7 @@ function App() {
                     <p 
                     style={{
                       margin: "0",
-                      fontSize: "12px",
+                      fontSize: "1.75vh",
                     }}
                     key={index}>{entry[0]}: {String(entry[1])}</p>
                   );
@@ -333,7 +348,7 @@ function App() {
                 backgroundColor: "red",
                 marginBottom: "10px",
                 borderRadius: "15px",
-                fontSize: "1.5em",
+                fontSize: "3.5vh",
               }}
               onClick={() => {
                 setEmergencyStop(true)
@@ -367,8 +382,8 @@ function App() {
               
               <div>
                 <Gauge 
-                width={75} 
-                height={75} 
+                width={height/10} 
+                height={height/10} 
                 value={Math.round(serialData.pressureTransmitter*400/1023)} 
                 valueMin={0}
                 valueMax={400}
