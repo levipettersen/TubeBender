@@ -13,6 +13,9 @@ import HoverInfo from './Components/HoverInfo';
 import { Gauge } from '@mui/x-charts/Gauge'
 // https://mui.com/x/react-charts/gauge/
 
+import Warning from '@mui/icons-material/Warning';
+// https://fonts.google.com/icons?icon.set=Material+Icons
+
 // Comment out for local testing
 // let socket = io('http://localhost:3001', { transports : ['websocket'] }); // Update with your server URL
 function connectToSocket() {
@@ -238,6 +241,7 @@ function App() {
             </div>
             <div>
               <p>Manual motor control</p>
+              <p>Toggle motor on/off</p>
               <button 
               disabled={controlMode === 'automatic' || emergencyStop}
               onClick={() => setArduinoData({...arduinoData, motorOn: !arduinoData.motorOn})}>{arduinoData.motorOn ? "Motor is on" : "Motor is off"}</button>
@@ -335,7 +339,15 @@ function App() {
                 setEmergencyStop(true)
                 setArduinoData({...arduinoData, motorOn: false, valvePWM: 127})
               }}
-              >EMERGENCY STOP</button>
+              >EMERGENCY STOP 
+              <Warning
+              style={{
+                position: "relative",
+                left: "0.3em",
+                top: "0.1em",
+              }}
+              />
+              </button>
               
               {
                 emergencyStop ? 
