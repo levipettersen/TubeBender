@@ -95,7 +95,16 @@ void loop() {
       break;
   }
 
-  encoderPos = getEncoderPos() * 3 / 20;
+  int pos_1 = getEncoderPos();
+
+  lcd.print(" pos:");
+  lcd.print(pos_1);
+  
+  // float floatPos = static_cast<float>(pos);
+  encoderPos = pos_1 * ( 3.0 / 20.0 );
+
+
+
   StaticJsonDocument<200> docOut;
   docOut["timestamp"] = timestamp;
 
@@ -171,3 +180,5 @@ void loop() {
   // }
 
 }
+
+

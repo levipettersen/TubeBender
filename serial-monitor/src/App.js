@@ -55,6 +55,8 @@ function App() {
   const [serialData, setSerialData] = useState({ timestamp: 0, sensor: 0, lcdButton: 0, encoderPos: 0, strainGauge: 0, pressureTransmitter: 0, deserializationError: false, controlMode: 0 });
   const [arduinoData, setArduinoData] = useState({ counter: 0, textInput: '', valvePWM: 127, motorOn: 0 });
   
+console.log(serialData);
+
   const [historizedData, setHistorizedData] = useState([]);
   const [isHistorizing, setIsHistorizing] = useState(false);
     
@@ -66,7 +68,7 @@ function App() {
   }));
 
   const { height, width } = useWindowDimensions();
-  console.log(`Height: ${height}, Width: ${width}`);
+  // console.log(`Height: ${height}, Width: ${width}`);
 
   // Comment out for local testing
   socket.emit('arduinoData', JSON5.stringify(arduinoData));
