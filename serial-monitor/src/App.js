@@ -19,10 +19,10 @@ import Warning from '@mui/icons-material/Warning';
 // https://fonts.google.com/icons?icon.set=Material+Icons
 
 // Comment out for local testing
-// let socket = io('http://localhost:3001', { transports : ['websocket'] }); // Update with your server URL
+let socket = io('http://localhost:3001', { transports : ['websocket'] }); // Update with your server URL
 function connectToSocket() {
   // Comment out for local testing
-  // socket = io('http://localhost:3001', { transports : ['websocket'] });
+  socket = io('http://localhost:3001', { transports : ['websocket'] });
 }
 
 // Ctrl+k Ctrl+, to create manual folding range
@@ -52,9 +52,26 @@ function App() {
 
   const [controlMode, setControlMode] = useState('manual');
 
-  const [serialData, setSerialData] = useState({ timestamp: 0, sensor: 0, lcdButton: 0, encoderPos: 0, strainGauge: 0, pressureTransmitter: 0, deserializationError: false });
+  const [serialData, setSerialData] = useState(
+    {
+      timestamp: 0,
+      sensor: 0,
+      lcdButton: 0,
+      encoderPos: 180,
+      strainGauge: 0,
+      pressureTransmitter: 0,
+      deserializationError: false,
+      controlMode: 0,
+      stopButton: 0,
+      startButton: 0,
+      dial: 0,
+      emergencyButton: 0,
+    }
+  );
   const [arduinoData, setArduinoData] = useState({ counter: 0, textInput: '', valvePWM: 127, motorOn: 0 });
   
+console.log(serialData);
+
   const [historizedData, setHistorizedData] = useState([]);
   const [isHistorizing, setIsHistorizing] = useState(false);
     
@@ -66,10 +83,10 @@ function App() {
   }));
 
   const { height, width } = useWindowDimensions();
-  console.log(`Height: ${height}, Width: ${width}`);
+  // console.log(`Height: ${height}, Width: ${width}`);
 
   // Comment out for local testing
-  // socket.emit('arduinoData', JSON5.stringify(arduinoData));
+  socket.emit('arduinoData', JSON5.stringify(arduinoData));
 
   useEffect(() => {
     let UIDebounceInterval;
@@ -77,15 +94,15 @@ function App() {
 
     // Connect to websocket if not already connected
     // Comment out for local testing
-    // if (!socket || socket.disconnected) {
-    //   connectToSocket();
-    // }
+    if (!socket || socket.disconnected) {
+      connectToSocket();
+    }
     
     // Handles closing the websocket
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       // Comment out for local testing
-      // socket.disconnect();
+      socket.disconnect();
       const confirmationMessage = 'Disconnect from websocket?';
       event.returnValue = confirmationMessage; // Standard for most browsers
       return confirmationMessage; // For some older browsers
@@ -97,57 +114,57 @@ function App() {
 
     // Receive and parse data from serial port
     // Comment out for local testing
-    // socket.on('serialData', (data) => {
-    //   try {
-    //     tempSerialData = JSON5.parse(data);
-    //     setSerialData(tempSerialData);
-    //     lastTime = thisTime;
-    //     thisTime = Number(tempSerialData.timestamp);
-    //     deltaTime = thisTime - lastTime;
-    //   } catch (error) {
-    //     // something went wrong with parsing the data
-    //   }
-    // });
+    socket.on('serialData', (data) => {
+      try {
+        tempSerialData = JSON5.parse(data);
+        setSerialData(tempSerialData);
+        lastTime = thisTime;
+        thisTime = Number(tempSerialData.timestamp);
+        deltaTime = thisTime - lastTime;
+      } catch (error) {
+        // something went wrong with parsing the data
+      }
+    });
 
     // update state with parsed data every 50ms
     UIDebounceInterval = setInterval(() => {
       // Comment out for live testing
-      setSerialData(tempSerialData);
+      // setSerialData(tempSerialData);
 
-      tempSerialData = {
-        timestamp: serialData.timestamp + 100,
-        sensor: Math.round(Math.sin(1*serialData.timestamp/10000)*512 + 512),
-        lcdButton: Math.round(Math.sin(2*serialData.timestamp/10000)*512 + 512),
-        encoderPos: Math.round(Math.sin(3*serialData.timestamp/10000)*512 + 512),
-        strainGauge: Math.round(Math.sin(4*serialData.timestamp/10000)*512 + 512),
-        pressureTransmitter: Math.round(Math.sin(5*serialData.timestamp/10000)*512 + 512),
-        deserializationError: false
-      }
+      // tempSerialData = {
+      //   timestamp: serialData.timestamp + 100,
+      //   sensor: Math.round(Math.sin(1*serialData.timestamp/10000)*512 + 512),
+      //   lcdButton: Math.round(Math.sin(2*serialData.timestamp/10000)*512 + 512),
+      //   encoderPos: Math.round(Math.sin(3*serialData.timestamp/10000)*512 + 512),
+      //   strainGauge: Math.round(Math.sin(4*serialData.timestamp/10000)*512 + 512),
+      //   pressureTransmitter: Math.round(Math.sin(5*serialData.timestamp/10000)*512 + 512),
+      //   deserializationError: false
+      // }
 
-      setSerialData(tempSerialData);
-        lastTime = thisTime;
-        thisTime = Number(tempSerialData.timestamp);
-        deltaTime = thisTime - lastTime;
+      // setSerialData(tempSerialData);
+      //   lastTime = thisTime;
+      //   thisTime = Number(tempSerialData.timestamp);
+      //   deltaTime = thisTime - lastTime;
 
     }, 100);
 
     // Cleanup
     return () => {
       // Comment out for local testing
-      // socket.disconnect();
+      socket.disconnect();
       clearInterval(UIDebounceInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
     // Comment out for live testing
-  }, [serialData]);
+  // }, [serialData]);
     // Comment out for local testing
-  // }, []);
+  }, []);
 
 
   // Send data to arduino upon change
   useEffect(() => {
     // Comment out for local testing
-    // socket.emit('arduinoData', JSON5.stringify(arduinoData));
+    socket.emit('arduinoData', JSON5.stringify(arduinoData));
   }, [arduinoData]);
 
 
@@ -216,12 +233,67 @@ function App() {
   //  setArduinoData({ ...arduinoData, motorOn: !arduinoData.motorOn});
   //}
 
+  const stopButtonStyle = {
+    border: "2px solid red",
+    backgroundColor: "transparent",
+  }
+
+  const startButtonStyle = {
+    border: "2px solid green",
+    backgroundColor: "transparent",
+  }
+
+  const emergencyButtonStyle = {
+    border: "2px solid red",
+    backgroundColor: "transparent",
+  }
+
+  const dialStyle = {
+    height: "100%",
+    width: "3px",
+    backgroundColor: "black",
+    margin: "auto",
+    rotate: "45deg",
+    transition: "rotate 0.25s",
+  }
+
+  // if stopbutton is 1, set background color to red. else keep it transparent
+  if (serialData.stopButton) {
+    stopButtonStyle.backgroundColor = "red";
+  } else {
+    stopButtonStyle.backgroundColor = "transparent";
+  }
+
+  // if startbutton is 1, set background color to green. else keep it transparent
+  if (serialData.startButton) {
+    startButtonStyle.backgroundColor = "green";
+  } else {
+    startButtonStyle.backgroundColor = "transparent";
+  }
+
+  // if dial is 1, rotate the dial 45 degrees. else rotate -45 degrees
+  if (serialData.dial) {
+    dialStyle.rotate = "45deg";
+  }
+  else {
+    dialStyle.rotate = "-45deg";
+  }
+
+  if (serialData.emergencyButton) {
+    emergencyButtonStyle.backgroundColor = "red";
+  }
+  else {
+    emergencyButtonStyle.backgroundColor = "transparent";
+  }
+
+
+
 
     return (
     <div className="App">
       <div style={{position: "absolute", left: "10px", top: "10px", width: "450px", height: "30px", display: "flex", justifyContent: "space-around", alignItems: "center"}}>
         {/* Comment out for local testing */}
-        {/*socket.connected*/ true ? (<p>Connected to socket</p>)  : (<p>Not connected to socket</p>)}
+        {socket.connected ? (<p>Connected to socket</p>)  : (<p>Not connected to socket</p>)}
         <button onClick={() => setMenuState('main')}>Main</button>
         <button onClick={() => setMenuState('plot')}>Plot</button>
         <button onClick={() => setMenuState('dev')}>Dev</button>
@@ -298,7 +370,7 @@ function App() {
                 height={height/10} 
                 value={serialData.encoderPos} 
                 valueMin={0}
-                valueMax={1023}
+                valueMax={360}
                 />
               </div>
             </div>
@@ -398,10 +470,42 @@ function App() {
                 gridColumn: '3 / 5',
                 // backgroundColor: 'lightblue',
                 display: 'flex',
+                flexDirection: 'row',
                 justifyContent: 'center',
                 height: '84%',
               }}
-            > Picture </div>
+            > 
+            <div
+              className='buttonIndicator'
+              style={stopButtonStyle}
+            > </div>
+            <div
+              className='buttonIndicator'
+              style={startButtonStyle}
+            > </div>
+
+            <div
+              style={{
+                height: "5vh",
+                width: "5vh",
+                border: "2px solid black",
+                borderRadius: "50%",
+              }}
+            >
+              <div
+                style={dialStyle}
+              > </div>
+            </div>
+
+            <div
+              className='buttonIndicator'
+              style={emergencyButtonStyle}
+            > 
+            </div>
+
+            Picture 
+            
+            </div>
             {/* <div> other data </div> */}
             <div
               style={{

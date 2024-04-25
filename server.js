@@ -22,6 +22,7 @@ let dataToSerialPort;
 
 const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 parser.on('data', (data) => {
+  // console.log(data);
   io.emit('serialData', data);
 });
 
