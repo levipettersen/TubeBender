@@ -89,3 +89,10 @@
   margin: 0;
   font-size: 2vh;
 }
+
+.buttonIndicator {
+  height: 5vh;
+  width: 5vh;
+  border-radius: 50%;
+  transition: background-color 0.1s;
+}
