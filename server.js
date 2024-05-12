@@ -46,4 +46,4 @@ setInterval(() => {
   if (dataToSerialPort) {
     serialPort.write(String(dataToSerialPort));
   }
-}, 250); // sends data to serial port every 250ms
+}, 250); // sends data to serial port every 500ms

@@ -70,7 +70,7 @@ function App() {
   );
   const [arduinoData, setArduinoData] = useState({ counter: 0, textInput: '', valvePWM: 127, motorOn: 0 });
   
-console.log(serialData);
+console.log(arduinoData);
 
   const [historizedData, setHistorizedData] = useState([]);
   const [isHistorizing, setIsHistorizing] = useState(false);
@@ -286,9 +286,6 @@ console.log(serialData);
     emergencyButtonStyle.backgroundColor = "transparent";
   }
 
-
-
-
     return (
     <div className="App">
       <div style={{position: "absolute", left: "10px", top: "10px", width: "450px", height: "30px", display: "flex", justifyContent: "space-around", alignItems: "center"}}>
@@ -299,84 +296,227 @@ console.log(serialData);
         <button onClick={() => setMenuState('dev')}>Dev</button>
         <div>Current page is {menuState}</div>
       </div>
-      <h1>Serial Data Monitor</h1>
+      <h1>Tube Bender 2024</h1>
         {
           menuState === 'main' ? // MAIN MENU
           <div className='mainContainer'>
-            <div>
-              <p>Set control mode (manual, automatic)</p>
-              <button onClick={() => setControlMode('manual')}
-              disabled={emergencyStop}
-              >Manual control</button>
-              <button onClick={() => {
-                setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
-                setControlMode('automatic');
-                }}
-                disabled={emergencyStop}
-                >Automatic control</button>
-              <p>Current control mode is {controlMode}</p>
-            </div>
-            <div>
-              <p>Manual motor control</p>
-              <p>Toggle motor on/off</p>
-              <button 
-              disabled={controlMode === 'automatic' || emergencyStop}
-              onClick={() => setArduinoData({...arduinoData, motorOn: !arduinoData.motorOn})}>{arduinoData.motorOn ? "Motor is on" : "Motor is off"}</button>
-            </div>
-            <div>
-              <p>Manual valve PWM control</p>
-              <input type="number" 
-              disabled={arduinoData.motorOn || controlMode === 'automatic' || emergencyStop} 
-              defaultValue={127} 
-              onChange={(e) => setArduinoData({ ...arduinoData, valvePWM: e.target.value})} 
-              value={arduinoData.valvePWM}
+
+            {/* main buttons container */}
+            <div
               style={{
-                width: "6vw",
-                height: "2vh"
+                display: "flex",
+                // border: "1px solid black",
+                height: "20vh",
+                alignItems: "center",
+                justifyContent: "center"
               }}
-              />
-              {/* <p>Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p> */}
+            >
+              <div> {/* motor toggle */}
+                {/* <p>Manual motor control</p> */}
+                {/* <p>Toggle motor on/off</p> */}
+                <button
+                style = {{
+                  backgroundColor: arduinoData.motorOn ? "red" : "green",
+                  borderRadius: "15px",
+                  fontSize: "2vw",
+                  // marginLeft: "30vw",
+                  // marginTop: "10vh",
+                  padding: "1vw",
+                }}
+                disabled={controlMode === 'automatic' || emergencyStop}
+                onClick={() => setArduinoData({...arduinoData, motorOn: !arduinoData.motorOn})}
+                className = 'controlButton'
+                >{arduinoData.motorOn ? "Turn motor off" : "Turn motor on"}
+                </button>
+              </div>
+
+              {/* spacer    */}
               <div style={{
-                position: "relative", 
-                // top: "30px", 
-                top: "0vh",
-                // right: "150px",
-                right: "9vw",
-                // fontSize: "1.5vh",
-                }}>
-                <HoverInfo><p style={{width: "17.5vw", fontSize: "1.5vh"}} >Operator Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p></HoverInfo>
+                // backgroundColor: "grey",
+                height: "1vh",
+                width: "10vw",
+                marginTop: "10vh",
+              }} > 
+              </div>
+
+              <div> {/* Emergency stop */}
+                {/* <p>Emergency stop button </p> */}
+                <button
+                style={{
+                  // height: "90%",
+                  // width: "90%",
+                  backgroundColor: "red",
+                  marginBottom: "10px",
+                  borderRadius: "15px",
+                  fontSize: "2vw",
+                  // marginRight: "0vw",
+                  marginTop: "2vh",
+                  padding: "1vw"
+                }}
+                onClick={() => {
+                  setEmergencyStop(true)
+                  setArduinoData({...arduinoData, motorOn: false, valvePWM: 127})
+                }}
+                className='controlButton'
+                >EMERGENCY STOP 
+                <Warning
+                style={{
+                  position: "relative",
+                  left: "0.3em",
+                  top: "0.1em",
+                }}
+                />
+                </button>
+
+                {
+                  emergencyStop ? 
+                  <button
+                  style={{
+                    margin: "0"
+                  }}
+                  onClick={() => setEmergencyStop(false)}
+                  >reset</button>
+                  :
+                  <></>
+                }
+
               </div>
             </div>
-            <div> 
-              <p>Automatic bending. Enter desired bend angle and springback value </p>
-              <p style={{margin:"0"}}>Desired bend angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
-              <p style={{margin:"0"}}>Springback angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
-              <button>Start automatic bending</button>
-            </div>
-            <div> 
-              <p>Motor state (idle, motor running, emergency stop)</p>
-              <p>
-              {
-                  emergencyStop ? "Emergency stop" :
-                  arduinoData.motorOn ? "Motor is running" : "Motor is idle"
-              }
-              </p>
-            </div>
-            <div> 
+
+            {/* row 2 container */}
+            <div
+              style={{
+                width: "100%",
+                height: "30vh",
+                // backgroundColor: "grey",
+                border: "1px solid black",
+                display: "flex",
+                justifyContent: "space-around",
+                alignItems: "center"
+              }}
+            >
+                <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}> {/* set control mode */}
+                  <p>Set control mode (manual, automatic)</p>
+                  <button 
+                  style={{fontSize: "1.5vw"}}
+                  onClick={() => setControlMode('manual')}
+                  disabled={emergencyStop}
+                  >Manual control 👷‍♂️👷‍♀️ </button>
+                  <button 
+                  style={{fontSize: "1.5vw"}}
+                  onClick={() => {
+                    setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
+                    setControlMode('automatic');
+                    }}
+                    disabled={emergencyStop}
+                    >Automatic control 🤖 </button>
+                  <button
+                    style={{
+                      borderRadius: "100%",
+                      width: "2em",
+                      height: "2em",
+                      border: "none",
+                      marginLeft: "1em"
+                    }}
+                    onClick={() => alert("Manual control: turn motor on with on/off button, and manually set the valve position \n \ntest")}
+                  >i</button>
+                  <p>Current control mode is {controlMode}</p>
+                </div>
+
+                <div> {/* valve pwm */}
+                  <p>Manual Valve {/* PWM */} Control</p>
+                  {/* <input type="number" 
+                  disabled={arduinoData.motorOn || controlMode === 'automatic' || emergencyStop} 
+                  defaultValue={127} 
+                  onChange={(e) => setArduinoData({ ...arduinoData, valvePWM: e.target.value})} 
+                  value={arduinoData.valvePWM}
+                  style={{
+                    width: "6vw",
+                    height: "2vh"
+                  }}
+                  /> */}
+                  <button style={{fontSize: "3vw"}}>
+                    ↩️
+                  </button>
+                  <button style={{fontSize: "3vw"}}>
+                    ↪️
+                  </button>
+                  {/* <button onClick={() => alert("din dumming")}>Hjelp, jeg skjønner ikke hva manual valve pwm control betyr</button> */}
+                  {/* <p>Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p> */}
+                  <div style={{
+                    // position: "relative", 
+                    // top: "30px", 
+                    // top: "0vh",
+                    // right: "150px",
+                    // right: "9vw",
+                    // fontSize: "1.5vh",
+                    }}>
+                    {/* <HoverInfo><p style={{width: "17.5vw", fontSize: "1.5vh"}} >Operator Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p></HoverInfo> */}
+                  </div>
+                </div>
+
+                <div> {/* automatic bending */}
+                  <p>Automatic bending. Enter desired bend angle and springback value </p>
+                  <p style={{margin:"0"}}>Desired bend angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
+                  <p style={{margin:"0"}}>Springback angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
+                  <button>Start automatic bending</button>
+                </div>
+
+                {/* <p>test1</p> */}
+                {/* <p>test2</p> */}
+            </div>  
+            
+            {/* Row 3 container */}
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                height: "39vh",
+                justifyContent: "space-around",
+                // border: "1px solid black",
+                alignItems: "center",
+              }}
+            >
+
+            <div> {/* bend angle gauge */}
               <p>Current bend angle: {serialData.encoderPos} </p>
-              <div>
+              <div
+                style={{
+                  fontSize: "5vh"
+                }}
+              >
                 <Gauge 
-                width={height/10} 
-                height={height/10} 
+                width={height/4} 
+                height={height/4} 
                 value={serialData.encoderPos} 
                 valueMin={0}
                 valueMax={360}
                 />
               </div>
             </div>
-            <div> 
-              <p>Temperature </p>
 
+            <div> {/* Hydraulic pressure gauge */}
+              <p>Hydraulic Pressure: {Math.round(serialData.pressureTransmitter*400/1023)} Bar </p>
+              
+              <div
+                style={{
+                  fontSize: "5vh"
+                }}
+              >
+                <Gauge 
+                width={height/4} 
+                height={height/4} 
+                value={Math.round(serialData.pressureTransmitter*400/1023)} 
+                valueMin={0}
+                valueMax={400}
+                />
+              </div>
+            
+            </div>
+
+            {/* extra gauge */}
+            {/* <div> 
+              <p>extra gauge </p>
               <div>
                 <Gauge 
                 width={height/10} 
@@ -386,9 +526,32 @@ console.log(serialData);
                 valueMax={40}
                 />
               </div>
+            </div> */}
 
-              </div>
-            <div style={{
+
+            
+
+            
+            
+            <div
+              style={{
+                width: height/4,
+              }}
+            > {/* motor state */}
+              <p>Motor state (idle, motor running, emergency stop)</p>
+              <p>
+              {
+                  emergencyStop ? "Emergency stop" :
+                  arduinoData.motorOn ? "Motor is running" : "Motor is idle"
+              }
+              </p>
+            </div>
+            
+            
+            
+            {/* raw data display */} 
+            {/* <div 
+            style={{ 
               display: "flex",
               flexDirection: "column",
               // alignItems: "flex-start",
@@ -410,69 +573,22 @@ console.log(serialData);
                   );
                 })
               }
-            </div>
-            <div> 
-              <p>Emergency stop button </p>
-              <button
-              style={{
-                height: "90%",
-                width: "90%",
-                backgroundColor: "red",
-                marginBottom: "10px",
-                borderRadius: "15px",
-                fontSize: "3.5vh",
-              }}
-              onClick={() => {
-                setEmergencyStop(true)
-                setArduinoData({...arduinoData, motorOn: false, valvePWM: 127})
-              }}
-              >EMERGENCY STOP 
-              <Warning
-              style={{
-                position: "relative",
-                left: "0.3em",
-                top: "0.1em",
-              }}
-              />
-              </button>
-              
-              {
-                emergencyStop ? 
-                <button
-                style={{
-                  margin: "0"
-                }}
-                onClick={() => setEmergencyStop(false)}
-                >reset</button>
-                :
-                <></>
-              }
-              
-            </div>
-            <div> 
-              <p>Hydraulic Pressure: {Math.round(serialData.pressureTransmitter*400/1023)} Bar </p>
-              
-              <div>
-                <Gauge 
-                width={height/10} 
-                height={height/10} 
-                value={Math.round(serialData.pressureTransmitter*400/1023)} 
-                valueMin={0}
-                valueMax={400}
-                />
-              </div>
+            </div> */}
+
+
             
-            </div>
-            <div
+
+            {/* picture */}
+            {/* <div 
               style={{
                 // go from line 3 to 5 on both row and column
-                gridRow: '3 / 5',
-                gridColumn: '3 / 5',
+                // gridRow: '3 / 5',
+                // gridColumn: '3 / 5',
                 // backgroundColor: 'lightblue',
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'center',
-                height: '84%',
+                // height: '84%',
               }}
             > 
             <div
@@ -505,20 +621,24 @@ console.log(serialData);
 
             Picture 
             
-            </div>
+          </div> */}
             {/* <div> other data </div> */}
-            <div
+
+            {/* bending list */}
+            {/* <div 
               style={{
-              gridRow: '1/3',
-              gridColumn: '4/5',
+              // gridRow: '1/3',
+              // gridColumn: '4/5',
               display: 'flex',
               justifyContent: 'center',
-              height: "84%"
+              // height: "84%"
               }}
-            > bending list </div>
+            > bending list 
+            </div> */}
             {/* <div> bending list </div> */}
             {/* <div> bending list </div> */}
             {/* <div> bending list </div> */}
+            </div>
 
           </div> :
           menuState === 'plot' ? // PLOT MENU

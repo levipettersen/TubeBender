@@ -10,7 +10,6 @@ const int d7 = 7;
 LiquidCrystal lcd(RS, EN, d4, d5, d6, d7);
 
 const int PWMpin = 10;
-int lcdPushButtonPin = A0;
 int motorPin = 52;
 int stopButtonPin = 45;
 int startButtonPin = 41;
@@ -19,14 +18,14 @@ int emergencyPin = 33;
 int valveRelayPin = 48;
 int strainGaugePin = A14;
 int pressureTransmitterPin = A13;
+int ledPin1 = 23;
+int ledPin2 = 25;
+int ledPin3 = 27;
+int ledPin4 = 29;
 
 
 
 int valvePWM = 127;
-
-int lcdPushButtonValue;
-String lcdPushButtonCommand;
-
 unsigned long timestamp;
 unsigned long starttime;
 unsigned long serialtimestamp = 0;
@@ -66,56 +65,36 @@ void setup() {
   pinMode(dialPin, INPUT);
   pinMode(emergencyPin, INPUT);
 
-  pinMode(lcdPushButtonPin, INPUT);
+  // pinMode(lcdPushButtonPin, INPUT);
   pinMode(strainGaugePin, INPUT);
   pinMode(pressureTransmitterPin, INPUT);
+
+  pinMode(ledPin1, OUTPUT);
+  pinMode(ledPin2, OUTPUT);
+  pinMode(ledPin3, OUTPUT);
+  pinMode(ledPin4, OUTPUT);
 
   controlMode = 1;
 }
 
 void loop() {
-
   timestamp = millis();
-
-  lcdPushButtonValue = analogRead(lcdPushButtonPin);
-  if (lcdPushButtonValue < 60){
-    lcdPushButtonCommand = "Right";
-    if (controlMode == 1) {
-      motorOn = true;
-    }
-  } else if(lcdPushButtonValue >= 60 && lcdPushButtonValue <= 200){
-    lcdPushButtonCommand = "Up";
-    if (controlMode == 1) {
-      motorOn = false;
-      valvePWM = 127;
-    }
-    controlMode = 2;
-  } else if (lcdPushButtonValue >= 200 && lcdPushButtonValue <= 400){
-      lcdPushButtonCommand = "Down";
-      if (controlMode == 2) {
-        motorOn = false;
-        valvePWM = 127;
-      }
-      controlMode = 1;
-  } else if (lcdPushButtonValue >= 400 && lcdPushButtonValue <= 600){
-    lcdPushButtonCommand = "Left";
-    if (controlMode == 1) {
-      motorOn = false;
-    }
-  } else if (lcdPushButtonValue >= 600 && lcdPushButtonValue <= 800){
-    lcdPushButtonCommand = "Select";
-  } else {
-    lcdPushButtonCommand = "None";
-  }
-
   stopButtonState = digitalRead(stopButtonPin);
   startButtonState = digitalRead(startButtonPin);
   dialState = digitalRead(dialPin);
   emergencyButtonState = digitalRead(emergencyPin);
 
   if (dialState) {
+    if (controlMode == 2) {
+      motorOn = false;
+      valvePWM = 127;
+    }
     controlMode = 1;
   } else {
+    if (controlMode == 1) {
+      motorOn = false;
+      valvePWM = 127;
+    }
     controlMode = 2;
   }
 
@@ -151,7 +130,7 @@ void loop() {
 
   // potpos = analogRead(A15);
   // docOut["sensor"] = potpos;
-  docOut["lcdButton"] = lcdPushButtonCommand;
+  // docOut["lcdButton"] = lcdPushButtonCommand;
   docOut["encoderPos"] = encoderPos;
   docOut["strainGauge"] = analogRead(strainGaugePin);
   docOut["pressureTransmitter"] = analogRead(pressureTransmitterPin);
@@ -184,9 +163,6 @@ void loop() {
         motorOn = false;
       }
     }
-  } else if (controlMode == 2) {
-    valvePWM = 127;
-    motorOn = false;
   }
 
   if (serialtimestamp == 0) {
@@ -208,12 +184,6 @@ void loop() {
   serializeJson(docOut, jsonString);
   Serial.println(jsonString);
 
-  // Motor on/off
-  digitalWrite(motorPin, motorOn);
-  
-  // Motor speed
-  analogWrite(PWMpin, valvePWM);
-
   // Valve on/off control
   if (controlMode == 1) {
     digitalWrite(valveRelayPin, LOW);
@@ -226,5 +196,17 @@ void loop() {
     valvePWM = 127;
     digitalWrite(valveRelayPin, LOW);
   }
+
+  // Motor on/off
+  digitalWrite(motorPin, motorOn);
+  
+  // Motor speed
+  analogWrite(PWMpin, valvePWM);
+
+  digitalWrite(ledPin1, !motorOn);
+  digitalWrite(ledPin2, motorOn);
+  digitalWrite(ledPin3, controlMode-2);
+  digitalWrite(ledPin4, HIGH);
+
 }
 
