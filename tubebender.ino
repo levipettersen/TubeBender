@@ -1,4 +1,6 @@
 #include <LiquidCrystal.h>
+
+#define ARDUINOJSON_ENABLE_COMMENTS 1
 #include <ArduinoJson.h>
 
 const int RS = 8;
@@ -47,9 +49,14 @@ bool stopButtonState = false;
 bool emergencyButtonState = false;
 bool dialState = false;
 
+bool angleReset = false;
+
+int desiredBendAngle = 0;
+int DSBA = 0;
+bool initAB = false;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   encoderSetup();
   lcd.begin(16, 2);
   starttime = millis();
@@ -121,11 +128,11 @@ void loop() {
   lcd.print(" pos:");
   lcd.print(pos_1);
   // float floatPos = static_cast<float>(pos);
-  encoderPos = pos_1 * ( 3.0 / 20.0 );
+  encoderPos = -pos_1 * ( 3.0 / 20.0 );
 
 
 
-  StaticJsonDocument<200> docOut;
+  StaticJsonDocument<800> docOut;
   docOut["timestamp"] = timestamp;
 
   // potpos = analogRead(A15);
@@ -139,19 +146,27 @@ void loop() {
   docOut["dial"] = dialState;
   docOut["emergencyButton"] = emergencyButtonState;
 
+
   if (Serial.available() > 0) {
     // read the incoming byte:
-    StaticJsonDocument<300> docIn;
+    StaticJsonDocument<800> docIn;
+    // DynamicJsonDocument docIn(2048);
     DeserializationError err = deserializeJson(docIn, Serial);
     serialtimestamp = millis();
     if (err == DeserializationError::Ok) {
       deserializationError = false;
       if (controlMode == 2) {
-        valvePWM = docIn["valvePWM"];
-        motorOn = docIn["motorOn"];
+        valvePWM = docIn["valvePWM"].as<int>();
+        motorOn = docIn["motorOn"].as<int>();
+        angleReset = docIn["angleReset"].as<int>();
+        // initAB = docIn["initAB"].as<int>();
+        // desiredBendAngle = docIn["DBA"].as<int>();
+        // DSBA = docIn["DSBA"];
       }
     } else {
       deserializationError = true;
+
+      docOut["erorrmessage"] = err.c_str();
 
       // lost serial, turn off
       if (controlMode == 2) {
@@ -163,6 +178,10 @@ void loop() {
         motorOn = false;
       }
     }
+  }
+
+  if (angleReset) {
+    resetEncoderPos();
   }
 
   if (serialtimestamp == 0) {

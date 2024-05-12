@@ -15,7 +15,7 @@ const JSON5 = require('json5');
 // Serialport
 const serialPort = new SerialPort({
   path: 'COM5',
-  baudRate: 9600
+  baudRate: 115200
 })
 
 let dataToSerialPort;
@@ -46,4 +46,6 @@ setInterval(() => {
   if (dataToSerialPort) {
     serialPort.write(String(dataToSerialPort));
   }
-}, 250); // sends data to serial port every 500ms
+}, 100); // sends data to serial port every 100ms
+// CHANGE THIS IF YOU GET DESERIALIZATION ERROR
+// TOO LOW VALUE CAN CAUSE ARDUINO NOT TO BE ABLE TO KEEP UP

@@ -28,3 +28,7 @@ void encoderSetup() {
 float getEncoderPos() {
   return pos;
 }
+
+void resetEncoderPos() {
+  pos = 0;
+}

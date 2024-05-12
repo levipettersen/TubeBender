@@ -50,26 +50,80 @@ function App() {
 
   const [emergencyStop, setEmergencyStop] = useState(false);
 
-  const [controlMode, setControlMode] = useState('manual');
+  const [HMIcontrolMode, setHMIControlMode] = useState('manual');
 
   const [serialData, setSerialData] = useState(
     {
       timestamp: 0,
-      sensor: 0,
-      lcdButton: 0,
+      // sensor: 0,
+      // lcdButton: 0,
       encoderPos: 180,
       strainGauge: 0,
       pressureTransmitter: 0,
-      deserializationError: false,
-      controlMode: 0,
       stopButton: 0,
       startButton: 0,
       dial: 0,
       emergencyButton: 0,
+      deserializationError: false,
+      controlMode: 0,
     }
   );
-  const [arduinoData, setArduinoData] = useState({ counter: 0, textInput: '', valvePWM: 127, motorOn: 0 });
-  
+  const [arduinoData, setArduinoData] = useState(
+    {
+      valvePWM: 127, 
+      motorOn: 0, 
+      angleReset: false,
+    });
+
+  const [autoData, setAutoData] = useState(
+    {
+      desiredBendAngle: 0,
+      desiredSpringbackAngle: 0,
+      initAB: false,
+      reset: false,
+    }
+  );
+
+  useEffect(() => {
+    if (serialData.encoderPos < Number(autoData.desiredBendAngle) + Number(autoData.desiredSpringbackAngle) && 
+    autoData.initAB === true && 
+    !emergencyStop) {
+      setArduinoData({...arduinoData, motorOn: true, valvePWM: 255});
+    } 
+
+    if (serialData.encoderPos > Number(autoData.desiredBendAngle) + Number(autoData.desiredSpringbackAngle) && 
+    autoData.initAB === true && 
+    !emergencyStop) {
+      setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
+    }
+
+    if (autoData.reset) {
+      setArduinoData({...arduinoData, motorOn: true, valvePWM: 0});
+    }
+
+  }, [autoData, serialData])
+
+  useEffect(() => {
+    if (
+      autoData.initAB && 
+      serialData.encoderPos > Number(autoData.desiredBendAngle) + Number(autoData.desiredSpringbackAngle)
+    ) {
+      setAutoData({...autoData, initAB: false});
+    }
+
+    if (
+      autoData.reset &&
+      serialData.encoderPos < 1
+    ) {
+      setAutoData({...autoData, reset: false});
+      setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
+    }
+
+  }, [serialData])
+
+
+  console.log(arduinoData);
+
 console.log(arduinoData);
 
   const [historizedData, setHistorizedData] = useState([]);
@@ -121,6 +175,9 @@ console.log(arduinoData);
         lastTime = thisTime;
         thisTime = Number(tempSerialData.timestamp);
         deltaTime = thisTime - lastTime;
+
+        
+
       } catch (error) {
         // something went wrong with parsing the data
       }
@@ -288,12 +345,24 @@ console.log(arduinoData);
 
     return (
     <div className="App">
-      <div style={{position: "absolute", left: "10px", top: "10px", width: "450px", height: "30px", display: "flex", justifyContent: "space-around", alignItems: "center"}}>
+      <div style={
+        {
+          position: "absolute", 
+          left: "10px", 
+          top: "10px", 
+          width: "450px", 
+          // height: "30px", 
+          width: "20vw",
+          display: "flex", 
+          flexDirection: "column",
+          // justifyContent: "space-around", 
+          // alignItems: "center"
+          }}>
         {/* Comment out for local testing */}
-        {socket.connected ? (<p>Connected to socket</p>)  : (<p>Not connected to socket</p>)}
-        <button onClick={() => setMenuState('main')}>Main</button>
-        <button onClick={() => setMenuState('plot')}>Plot</button>
-        <button onClick={() => setMenuState('dev')}>Dev</button>
+        {socket.connected ? (<p style={{margin: "0"}}>Connected to socket</p>)  : (<p style={{margin: "0"}}>Not connected to socket</p>)}
+        <button style={{width: "5vw"}} onClick={() => setMenuState('main')}>Main</button>
+        <button style={{width: "5vw"}} onClick={() => setMenuState('plot')}>Plot</button>
+        <button style={{width: "5vw"}} onClick={() => setMenuState('dev')}>Dev</button>
         <div>Current page is {menuState}</div>
       </div>
       <h1>Tube Bender 2024</h1>
@@ -323,7 +392,7 @@ console.log(arduinoData);
                   // marginTop: "10vh",
                   padding: "1vw",
                 }}
-                disabled={controlMode === 'automatic' || emergencyStop}
+                disabled={HMIcontrolMode === 'automatic' || emergencyStop}
                 onClick={() => setArduinoData({...arduinoData, motorOn: !arduinoData.motorOn})}
                 className = 'controlButton'
                 >{arduinoData.motorOn ? "Turn motor off" : "Turn motor on"}
@@ -356,6 +425,7 @@ console.log(arduinoData);
                 onClick={() => {
                   setEmergencyStop(true)
                   setArduinoData({...arduinoData, motorOn: false, valvePWM: 127})
+                  setAutoData({...autoData, initAB: false});
                 }}
                 className='controlButton'
                 >EMERGENCY STOP 
@@ -397,20 +467,28 @@ console.log(arduinoData);
             >
                 <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}> {/* set control mode */}
                   <p>Set control mode (manual, automatic)</p>
-                  <button 
-                  style={{fontSize: "1.5vw"}}
-                  onClick={() => setControlMode('manual')}
-                  disabled={emergencyStop}
-                  >Manual control 👷‍♂️👷‍♀️ </button>
-                  <button 
-                  style={{fontSize: "1.5vw"}}
-                  onClick={() => {
-                    setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
-                    setControlMode('automatic');
-                    }}
-                    disabled={emergencyStop}
-                    >Automatic control 🤖 </button>
-                  <button
+                  <div style={{display: "flex", alignItems: "center"}}>
+                    <div style={{display: "flex", flexDirection: "column"}}>
+                      <button 
+                      style={{fontSize: "1.5vw"}}
+                      onClick={() => {
+                        setHMIControlMode('manual')
+                        setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
+                        setAutoData({...autoData, initAB: false});
+                      }}
+                      disabled={emergencyStop}
+                      >Manual control {/*👷‍♂️👷‍♀️*/} </button>
+                      <button 
+                      style={{fontSize: "1.5vw"}}
+                      onClick={() => {
+                        setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
+                        setAutoData({...autoData, initAB: false});
+                        setHMIControlMode('automatic');
+                        }}
+                        disabled={emergencyStop}
+                        >Automatic control {/*🤖*/} </button>
+                    </div>
+                    <button
                     style={{
                       borderRadius: "100%",
                       width: "2em",
@@ -418,15 +496,45 @@ console.log(arduinoData);
                       border: "none",
                       marginLeft: "1em"
                     }}
-                    onClick={() => alert("Manual control: turn motor on with on/off button, and manually set the valve position \n \ntest")}
-                  >i</button>
-                  <p>Current control mode is {controlMode}</p>
+                    onClick={() => alert(
+                      "Manual control: turn motor on with on/off button, and manually set the valve position \n \nAutomatic control: Set desired bend and springback angle to initiate bending")}
+                    >i</button>
+                  </div>
+                  <p style={{margin: "0"}}>Local/HMI control? {serialData.controlMode === 1 ? 'local' : 'HMI'}
+                    <button
+                    style={{
+                      borderRadius: "100%",
+                      width: "1.5em",
+                      height: "1.5em",
+                      border: "none",
+                      marginLeft: "1em"
+                    }}
+                    onClick={() => alert(
+                      "")}
+                    >i</button>
+                  </p>
+                  <p style={{margin: "0"}}>Current HMI control mode is {HMIcontrolMode}
+                    <button
+                    style={{
+                      borderRadius: "100%",
+                      width: "1.5em",
+                      height: "1.5em",
+                      border: "none",
+                      marginLeft: "1em"
+                    }}
+                    onClick={() => alert(
+                      "")}
+                    >i</button>
+                  </p>
                 </div>
 
-                <div> {/* valve pwm */}
+                <div
+                  style={{display: "flex", flexDirection: "column"}}
+                > {/* valve pwm */}
                   <p>Manual Valve {/* PWM */} Control</p>
-                  {/* <input type="number" 
-                  disabled={arduinoData.motorOn || controlMode === 'automatic' || emergencyStop} 
+                  <input type="number" 
+                  // disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop} 
+                  disabled = {true}
                   defaultValue={127} 
                   onChange={(e) => setArduinoData({ ...arduinoData, valvePWM: e.target.value})} 
                   value={arduinoData.valvePWM}
@@ -434,12 +542,24 @@ console.log(arduinoData);
                     width: "6vw",
                     height: "2vh"
                   }}
-                  /> */}
-                  <button style={{fontSize: "3vw"}}>
-                    ↩️
+                  />
+                  <button
+                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 255})}
+                    disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop}
+                  >
+                    Bend forward
                   </button>
-                  <button style={{fontSize: "3vw"}}>
-                    ↪️
+                  <button
+                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 0})}
+                    disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop}
+                  >
+                    Bend back
+                  </button>
+                  <button
+                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 127})}
+                    disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop}
+                  >
+                    Neutral valve position
                   </button>
                   {/* <button onClick={() => alert("din dumming")}>Hjelp, jeg skjønner ikke hva manual valve pwm control betyr</button> */}
                   {/* <p>Note: valve can only be adjusted when motor is off. 127 is neutral. &lt;127 is CCW/CW. &gt;127 is CCW/CW </p> */}
@@ -457,9 +577,30 @@ console.log(arduinoData);
 
                 <div> {/* automatic bending */}
                   <p>Automatic bending. Enter desired bend angle and springback value </p>
-                  <p style={{margin:"0"}}>Desired bend angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
-                  <p style={{margin:"0"}}>Springback angle <input style={{width: "4vw", height: "2vh"}} type="number" /> </p>
-                  <button>Start automatic bending</button>
+                  <p style={{margin:"0"}}>Desired bend angle 
+                    <input 
+                      value={autoData.desiredBendAngle} 
+                      onChange={(e) => setAutoData({...autoData, desiredBendAngle:e.target.valueAsNumber})} 
+                      disabled={HMIcontrolMode === 'manual'} style={{width: "6vw", height: "2vh"}} type="number" /> </p>
+                  <p style={{margin:"0"}}>Springback angle 
+                    <input 
+                      value={autoData.desiredSpringbackAngle} 
+                      onChange={(e) => setAutoData({...autoData, desiredSpringbackAngle:e.target.valueAsNumber})} 
+                      disabled={HMIcontrolMode === 'manual'} style={{width: "6vw", height: "2vh"}} type="number" /> </p>
+                  <button 
+                  disabled={HMIcontrolMode === 'manual'}
+                  onClick={() => setAutoData({ ...autoData, initAB: true})}
+                  >Start automatic bending</button>
+                  <button 
+                  disabled={HMIcontrolMode === 'manual'}
+                  onClick={() => setAutoData({ ...autoData, initAB: false})}
+                  >Stop automatic bending</button>
+                  state : {autoData.initAB? 'true':'false'}, {autoData.desiredBendAngle + autoData.desiredSpringbackAngle}
+                  <p style={{margin: "0"}}>
+                    <button
+                      onClick={() => setAutoData({...autoData, initAB: false, reset: true})}
+                    >Back to 0</button>
+                  </p>
                 </div>
 
                 {/* <p>test1</p> */}
@@ -479,7 +620,18 @@ console.log(arduinoData);
             >
 
             <div> {/* bend angle gauge */}
-              <p>Current bend angle: {serialData.encoderPos} </p>
+              <p>Current bend angle: {serialData.encoderPos}
+                <button
+                  onClick={() => {
+                    setArduinoData({...arduinoData, angleReset: true});
+                    setTimeout(() => {
+                      setArduinoData({...arduinoData, angleReset: false});
+                    }, 200)
+                  }
+                  }
+                  // onMouseUp={() => setArduinoData({...arduinoData, angleReset: false})}
+                >Reset</button>
+              </p>
               <div
                 style={{
                   fontSize: "5vh"
@@ -491,6 +643,8 @@ console.log(arduinoData);
                 value={serialData.encoderPos} 
                 valueMin={0}
                 valueMax={360}
+                startAngle={-90}
+                endAngle={270}
                 />
               </div>
             </div>
