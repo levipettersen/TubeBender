@@ -84,11 +84,13 @@ function App() {
     }
   );
 
+  const [bendingPower, setBendingPower] = useState(100);
+
   useEffect(() => {
     if (serialData.encoderPos < Number(autoData.desiredBendAngle) + Number(autoData.desiredSpringbackAngle) && 
     autoData.initAB === true && 
     !emergencyStop) {
-      setArduinoData({...arduinoData, motorOn: true, valvePWM: 255});
+      setArduinoData({...arduinoData, motorOn: true, valvePWM: 139 + bendingPower*51/100});
     } 
 
     if (serialData.encoderPos > Number(autoData.desiredBendAngle) + Number(autoData.desiredSpringbackAngle) && 
@@ -97,8 +99,8 @@ function App() {
       setArduinoData({...arduinoData, motorOn: false, valvePWM: 127});
     }
 
-    if (autoData.reset) {
-      setArduinoData({...arduinoData, motorOn: true, valvePWM: 0});
+    if (autoData.reset && !emergencyStop) {
+      setArduinoData({...arduinoData, motorOn: true, valvePWM: 106 - bendingPower*43/100});
     }
 
   }, [autoData, serialData])
@@ -107,6 +109,7 @@ function App() {
     if (
       autoData.initAB && 
       serialData.encoderPos > Number(autoData.desiredBendAngle) + Number(autoData.desiredSpringbackAngle)
+      && !emergencyStop
     ) {
       setAutoData({...autoData, initAB: false});
     }
@@ -365,6 +368,21 @@ console.log(arduinoData);
         <button style={{width: "5vw"}} onClick={() => setMenuState('dev')}>Dev</button>
         <div>Current page is {menuState}</div>
       </div>
+      <div style={{
+        position: "absolute",
+        right: "1vw",
+        top: "1vh"
+        }}>
+          Bending power 0 - 100 % <input style={{width: "5vw"}} type="number" max={100} min={0} value={bendingPower} onChange={
+            (e) => {
+              let percentage = e.target.valueAsNumber
+              if (percentage > 100) {
+                percentage = 100
+              }
+              setBendingPower(percentage)
+            }
+            }></input>
+        </div>
       <h1>Tube Bender 2024</h1>
         {
           menuState === 'main' ? // MAIN MENU
@@ -380,9 +398,17 @@ console.log(arduinoData);
                 justifyContent: "center"
               }}
             >
-              <div> {/* motor toggle */}
+              <div style={{position: "relative"}}> {/* motor toggle */}
                 {/* <p>Manual motor control</p> */}
                 {/* <p>Toggle motor on/off</p> */}
+                <div style={{
+                    position: "absolute", height: "25vh", width: "1vw", backgroundColor: "red", opacity: "75%", left: "7vw", top: "-7vh", rotate: "45deg", borderRadius: "1em",
+                    display: HMIcontrolMode === 'automatic' || emergencyStop ? "inline" : "none"
+                  }}> </div>
+                  <div style={{
+                    position: "absolute", height: "25vh", width: "1vw", backgroundColor: "red", opacity: "75%", left: "7vw", top: "-7vh", rotate: "-45deg", borderRadius: "1em",
+                    display: HMIcontrolMode === 'automatic' || emergencyStop ? "inline" : "none"
+                  }}> </div>
                 <button
                 style = {{
                   backgroundColor: arduinoData.motorOn ? "red" : "green",
@@ -529,8 +555,16 @@ console.log(arduinoData);
                 </div>
 
                 <div
-                  style={{display: "flex", flexDirection: "column"}}
+                  style={{display: "flex", flexDirection: "column", position: "relative"}}
                 > {/* valve pwm */}
+                  <div style={{
+                    position: "absolute", height: "25vh", width: "1vw", backgroundColor: "red", opacity: "75%", left: "3vw", top: "-2vh", rotate: "45deg", borderRadius: "1em",
+                    display: arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop ? "inline" : "none"
+                  }}> </div>
+                  <div style={{
+                    position: "absolute", height: "25vh", width: "1vw", backgroundColor: "red", opacity: "75%", left: "3vw", top: "-2vh", rotate: "-45deg", borderRadius: "1em",
+                    display: arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop ? "inline" : "none"
+                  }}> </div>
                   <p>Manual Valve {/* PWM */} Control</p>
                   <input type="number" 
                   // disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop} 
@@ -544,13 +578,13 @@ console.log(arduinoData);
                   }}
                   />
                   <button
-                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 255})}
+                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 139 + bendingPower*51/100})}
                     disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop}
                   >
                     Bend forward
                   </button>
                   <button
-                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 0})}
+                    onClick={() => setArduinoData({ ...arduinoData, valvePWM: 106 - bendingPower*43/100})}
                     disabled={arduinoData.motorOn || HMIcontrolMode === 'automatic' || emergencyStop}
                   >
                     Bend back
@@ -575,7 +609,15 @@ console.log(arduinoData);
                   </div>
                 </div>
 
-                <div> {/* automatic bending */}
+                <div style={{position: "relative"}}> {/* automatic bending */}
+                  <div style={{
+                    position: "absolute", height: "25vh", width: "1vw", backgroundColor: "red", opacity: "75%", left: "7vw", top: "-4vh", rotate: "45deg", borderRadius: "1em",
+                    display: HMIcontrolMode === 'manual' || emergencyStop ? "inline" : "none"
+                  }}> </div>
+                  <div style={{
+                    position: "absolute", height: "25vh", width: "1vw", backgroundColor: "red", opacity: "75%", left: "7vw", top: "-4vh", rotate: "-45deg", borderRadius: "1em",
+                    display: HMIcontrolMode === 'manual' || emergencyStop ? "inline" : "none"
+                  }}> </div>
                   <p>Automatic bending. Enter desired bend angle and springback value </p>
                   <p style={{margin:"0"}}>Desired bend angle 
                     <input 
@@ -593,11 +635,15 @@ console.log(arduinoData);
                   >Start automatic bending</button>
                   <button 
                   disabled={HMIcontrolMode === 'manual'}
-                  onClick={() => setAutoData({ ...autoData, initAB: false})}
+                  onClick={() => {
+                    setAutoData({ ...autoData, initAB: false})
+                    setArduinoData({...arduinoData, motorOn: false, valvePWM: 127})
+                  }}
                   >Stop automatic bending</button>
                   state : {autoData.initAB? 'true':'false'}, {autoData.desiredBendAngle + autoData.desiredSpringbackAngle}
                   <p style={{margin: "0"}}>
                     <button
+                    disabled={HMIcontrolMode === 'manual'}
                       onClick={() => setAutoData({...autoData, initAB: false, reset: true})}
                     >Back to 0</button>
                   </p>

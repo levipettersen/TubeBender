@@ -25,6 +25,8 @@ int ledPin2 = 25;
 int ledPin3 = 27;
 int ledPin4 = 29;
 
+int pb1pin = 51;
+int pb2pin = 53;
 
 
 int valvePWM = 127;
@@ -48,6 +50,9 @@ bool startButtonState = false;
 bool stopButtonState = false;
 bool emergencyButtonState = false;
 bool dialState = false;
+
+bool pb1state = false;
+bool pb2state = false;
 
 bool angleReset = false;
 
@@ -81,6 +86,10 @@ void setup() {
   pinMode(ledPin3, OUTPUT);
   pinMode(ledPin4, OUTPUT);
 
+  pinMode(pb1pin, INPUT_PULLUP);
+  pinMode(pb2pin, INPUT_PULLUP);
+  
+
   controlMode = 1;
 }
 
@@ -91,7 +100,10 @@ void loop() {
   dialState = digitalRead(dialPin);
   emergencyButtonState = digitalRead(emergencyPin);
 
-  if (dialState) {
+  pb1state = !digitalRead(pb1pin);
+  pb2state = !digitalRead(pb2pin);
+
+  if (!dialState) {
     if (controlMode == 2) {
       motorOn = false;
       valvePWM = 127;
@@ -146,6 +158,9 @@ void loop() {
   docOut["dial"] = dialState;
   docOut["emergencyButton"] = emergencyButtonState;
 
+  docOut["pb1"] = pb1state;
+  docOut["pb2"] = pb2state;
+
 
   if (Serial.available() > 0) {
     // read the incoming byte:
@@ -155,10 +170,10 @@ void loop() {
     serialtimestamp = millis();
     if (err == DeserializationError::Ok) {
       deserializationError = false;
+      angleReset = docIn["angleReset"].as<int>();
       if (controlMode == 2) {
         valvePWM = docIn["valvePWM"].as<int>();
         motorOn = docIn["motorOn"].as<int>();
-        angleReset = docIn["angleReset"].as<int>();
         // initAB = docIn["initAB"].as<int>();
         // desiredBendAngle = docIn["DBA"].as<int>();
         // DSBA = docIn["DSBA"];
@@ -217,7 +232,14 @@ void loop() {
   }
 
   // Motor on/off
-  digitalWrite(motorPin, motorOn);
+  if (
+    (pb1state && pb2state) || (controlMode == 1 && (pb1state || pb2state))
+  ) {
+    digitalWrite(motorPin, motorOn);
+  } else {
+    digitalWrite(motorPin, false);
+  }
+
   
   // Motor speed
   analogWrite(PWMpin, valvePWM);
