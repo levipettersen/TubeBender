@@ -665,9 +665,17 @@ console.log(arduinoData);
               }}
             >
 
-            <div> {/* bend angle gauge */}
-              <p>Current bend angle: {serialData.encoderPos}
-                <button
+            <div style={{
+              width: "33vw",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              position: "relative",
+            }}> {/* bend angle gauge */}
+              <p style={{position: "relative"}}>Current bend angle: <span style={{position: "absolute", right: "-3em"}}>{serialData.encoderPos}</span>
+                
+              </p>
+              <button
                   onClick={() => {
                     setArduinoData({...arduinoData, angleReset: true});
                     setTimeout(() => {
@@ -675,9 +683,15 @@ console.log(arduinoData);
                     }, 200)
                   }
                   }
+                  style={{
+                    position: "absolute",
+                    right: "0vw",
+                    top: "15vh",
+                    fontSize: "1.5vw",
+                    width: "8vw"
+                  }}
                   // onMouseUp={() => setArduinoData({...arduinoData, angleReset: false})}
-                >Reset</button>
-              </p>
+                >Reset Angle</button>
               <div
                 style={{
                   fontSize: "5vh"
@@ -686,7 +700,7 @@ console.log(arduinoData);
                 <Gauge 
                 width={height/4} 
                 height={height/4} 
-                value={serialData.encoderPos} 
+                value={Math.round(serialData.encoderPos)} 
                 valueMin={0}
                 valueMax={360}
                 startAngle={-90}
@@ -695,7 +709,12 @@ console.log(arduinoData);
               </div>
             </div>
 
-            <div> {/* Hydraulic pressure gauge */}
+            <div style={{
+              width: "33vw",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              }}> {/* Hydraulic pressure gauge */}
               <p>Hydraulic Pressure: {Math.round(serialData.pressureTransmitter*400/1023)} Bar </p>
               
               <div
@@ -735,7 +754,10 @@ console.log(arduinoData);
             
             <div
               style={{
-                width: height/4,
+                width: "33vw",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
               }}
             > {/* motor state */}
               <p>Motor state (idle, motor running, emergency stop)</p>

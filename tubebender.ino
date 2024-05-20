@@ -66,7 +66,7 @@ void setup() {
   lcd.begin(16, 2);
   starttime = millis();
 
-  lcd.print("Starting up");
+  lcd.print("Tube Bender");
 
   pinMode(PWMpin, OUTPUT);
   pinMode(motorPin, OUTPUT);
@@ -117,13 +117,13 @@ void loop() {
     controlMode = 2;
   }
 
-  lcd.clear();
-  lcd.print("Control Mode:");
-  lcd.setCursor(0, 1);
+  // lcd.clear();
+  // lcd.print("Control Mode:");
+  // lcd.setCursor(0, 1);
 
   switch(controlMode) {
     case 1:
-      lcd.print("Manual");
+      // lcd.print("Manual");
       if (motorOn && !emergencyButtonState) {
         motorOn = !stopButtonState;
       } else if (!emergencyButtonState) {
@@ -131,17 +131,20 @@ void loop() {
       }
       break;
     case 2:
-      lcd.print("Automatic");
+      // lcd.print("Automatic");
       break;
   }
 
   // Encoder calculations
   int pos_1 = getEncoderPos();
-  lcd.print(" pos:");
-  lcd.print(pos_1);
+  // lcd.print(" pos:");
+  // lcd.print(pos_1);
   // float floatPos = static_cast<float>(pos);
   encoderPos = -pos_1 * ( 3.0 / 20.0 );
 
+  lcd.setCursor(0, 1);
+  lcd.print("Angle: ");
+  lcd.print(encoderPos);
 
 
   StaticJsonDocument<800> docOut;
@@ -185,10 +188,10 @@ void loop() {
 
       // lost serial, turn off
       if (controlMode == 2) {
-        lcd.clear();
-        lcd.print("Deserialization");
-        lcd.setCursor(0, 1);
-        lcd.print("error");
+        // lcd.clear();
+        // lcd.print("Deserialization");
+        // lcd.setCursor(0, 1);
+        // lcd.print("error");
         valvePWM = 127;
         motorOn = false;
       }
@@ -239,7 +242,7 @@ void loop() {
   } else {
     digitalWrite(motorPin, false);
   }
-
+  
   
   // Motor speed
   analogWrite(PWMpin, valvePWM);

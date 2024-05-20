@@ -1,8 +1,22 @@
+# Tube Bender
+This repository contains software for the University of Agder Tube Bender. It has three parts: 
+
+- Arduino Code
+  - Written in Arduino IDE in the arduino programming language
+- Server
+  - Node.js server written in JavaScript
+- HMI
+  - React application written in JavaScript
+
 # Prerequesites
 [Node.js](https://nodejs.org/en) - Download the LTS version and follow the installer. Version 20.11.0 of Node.js and version 10.2.4 of npm was used during development
+[Arduino IDE](https://www.arduino.cc/en/software) - For modifications to the Arduino
 
 # Downloading and setup
 Download using the green button at the top labelled "Code". This opens a drop down menu where you can click "Download ZIP". Unzip this file.
+
+# Uploading Arduino Code
+While this step should usually not be necessary, reuploading the code to the Arduino may be required in the event that the existing code on it is overwritten or corrupted. To upload the code to the Arduino, use the Arduino IDE. With the "tubebender.ino" file open, press the "upload" button in the top-left corner while the Arduino is connected to your computer. It may take a while for this to complete. Make sure the server is not running while uploading code to the Arduino, as this makes the Arduino IDE unable to connect to the Arduino serial port.
 
 # Starting the server
 Open a terminal in the "TubeBender-main" folder (In Windows, right click and select "open in terminal"). Run `npm install` to install all dependencies. This should not take very long. When that is finished, plug in the arduino USB cable and run `npm start` in the terminal. If you see "Server is running on port 3001" printed on the terminal, the server is running properly.
