@@ -10,6 +10,7 @@ This repository contains software for the University of Agder Tube Bender. It ha
 
 # Prerequesites
 [Node.js](https://nodejs.org/en) - Download the LTS version and follow the installer. Version 20.11.0 of Node.js and version 10.2.4 of npm was used during development
+
 [Arduino IDE](https://www.arduino.cc/en/software) - For modifications to the Arduino
 
 # Downloading and setup
