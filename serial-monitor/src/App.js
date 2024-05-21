@@ -373,7 +373,7 @@ console.log(arduinoData);
         right: "1vw",
         top: "1vh"
         }}>
-          Bending power 0 - 100 % <input style={{width: "5vw"}} type="number" max={100} min={0} value={bendingPower} onChange={
+          Bending speed 0 - 100 % <input style={{width: "5vw"}} type="number" max={100} min={0} value={bendingPower} onChange={
             (e) => {
               let percentage = e.target.valueAsNumber
               if (percentage > 100) {
